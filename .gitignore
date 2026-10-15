@@ -1,0 +1,15 @@
+# Secrets
+.env
+.venv/
+
+# dbt
+dbt/target/
+dbt/dbt_packages/
+dbt/logs/
+
+# Databricks bundles
+.databricks/
+
+# Local data (never commit raw data)
+data/
+*.zip
