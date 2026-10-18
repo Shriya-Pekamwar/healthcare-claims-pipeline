@@ -11,5 +11,6 @@
 
 ## How to reproduce
 1. Download the five Sample 1 files listed above from cms.gov.
+https://www.cms.gov/data-research/statistics-trends-and-reports/medicare-claims-synthetic-public-use-files/cms-2008-2010-data-entrepreneurs-synthetic-public-use-file-de-synpuf
 2. Unzip and upload the CSVs to `/Volumes/workspace/raw/synpuf`.
 3. Run the bronze ingestion job (see README).
