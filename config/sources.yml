@@ -45,7 +45,7 @@ sources:
     required_columns: [desynpuf_id, clm_id, segment, clm_from_dt, clm_pmt_amt]
     key_columns: [desynpuf_id, clm_id]
     #min_rows: 10000
-    min_rows:100000000
+    min_rows: 100000000
 
   outpatient_claims:
     path: DE1_0_2008_to_2010_Outpatient_Claims_Sample_1.csv
