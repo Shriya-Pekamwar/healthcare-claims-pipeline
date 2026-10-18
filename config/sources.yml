@@ -1,0 +1,56 @@
+# Bronze ingestion config. One entry per source table.
+# All columns are loaded as strings; typing happens in dbt staging models.
+
+defaults:
+  catalog: workspace
+  bronze_schema: bronze
+  volume: /Volumes/workspace/raw/synpuf
+
+sources:
+  beneficiary_2008:
+    path: DE1_0_2008_Beneficiary_Summary_File_Sample_1.csv
+    header: true
+    delimiter: ","
+    load_mode: overwrite
+    source_year: 2008
+    required_columns: [desynpuf_id, bene_birth_dt, bene_sex_ident_cd]
+    key_columns: [desynpuf_id]
+    min_rows: 10000
+
+  beneficiary_2009:
+    path: DE1_0_2009_Beneficiary_Summary_File_Sample_1.csv
+    header: true
+    delimiter: ","
+    load_mode: overwrite
+    source_year: 2009
+    required_columns: [desynpuf_id, bene_birth_dt, bene_sex_ident_cd]
+    key_columns: [desynpuf_id]
+    min_rows: 10000
+
+  beneficiary_2010:
+    path: DE1_0_2010_Beneficiary_Summary_File_Sample_1.csv
+    header: true
+    delimiter: ","
+    load_mode: overwrite
+    source_year: 2010
+    required_columns: [desynpuf_id, bene_birth_dt, bene_sex_ident_cd]
+    key_columns: [desynpuf_id]
+    min_rows: 10000
+
+  inpatient_claims:
+    path: DE1_0_2008_to_2010_Inpatient_Claims_Sample_1.csv
+    header: true
+    delimiter: ","
+    load_mode: overwrite
+    required_columns: [desynpuf_id, clm_id, segment, clm_from_dt, clm_pmt_amt]
+    key_columns: [desynpuf_id, clm_id]
+    min_rows: 10000
+
+  outpatient_claims:
+    path: DE1_0_2008_to_2010_Outpatient_Claims_Sample_1.csv
+    header: true
+    delimiter: ","
+    load_mode: overwrite
+    required_columns: [desynpuf_id, clm_id, segment, clm_from_dt, clm_pmt_amt]
+    key_columns: [desynpuf_id, clm_id]
+    min_rows: 10000
