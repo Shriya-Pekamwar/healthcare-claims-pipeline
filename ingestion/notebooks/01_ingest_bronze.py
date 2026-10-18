@@ -1,4 +1,8 @@
 # Databricks notebook source
+# /// script
+# [tool.databricks.environment]
+# environment_version = "6"
+# ///
 # MAGIC %md
 # MAGIC # Bronze ingestion
 # MAGIC Reads every source listed in `config/sources.yml`, runs bronze quality checks,
@@ -14,8 +18,8 @@ import uuid
 # Make the pipeline_core package importable (notebook runs from ingestion/notebooks/)
 sys.path.insert(0, os.path.abspath("../src"))
 
-from src.pipeline_core.config import load_config
-from src.pipeline_core.ingest import ingest_all, results_to_df
+from pipeline_core.config import load_config
+from pipeline_core.ingest import ingest_all, results_to_df
 
 # COMMAND ----------
 
