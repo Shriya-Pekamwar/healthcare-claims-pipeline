@@ -5,7 +5,12 @@
 - **What it is:** Synthetic Medicare claims for 2008–2010, designed to resemble real
   claims structure without containing any real patient data.
 - **Files used:** Beneficiary Summary (2008, 2009, 2010), Inpatient Claims, Outpatient Claims
-- **Approximate size:** ~115K beneficiaries per year, ~66K inpatient and ~790K outpatient claim records
+- **Approximate size:** 
+   inpatient_claims	 66773
+   beneficiary_2009	 114538
+   beneficiary_2008	 116352
+   beneficiary_2010	 112754
+   outpatient_claims 790790
 - **Not committed to this repo:** files are downloaded from CMS and uploaded to a
   Unity Catalog volume at `/Volumes/workspace/raw/synpuf`.
 
