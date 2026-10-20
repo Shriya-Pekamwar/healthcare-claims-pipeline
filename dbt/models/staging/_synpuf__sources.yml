@@ -1,0 +1,18 @@
+version: 2
+
+sources:
+  - name: synpuf_bronze
+    description: Raw CMS DE-SynPUF Sample 1 tables loaded by the PySpark bronze job.
+    catalog: workspace
+    schema: bronze
+    tables:
+      - name: beneficiary_2008
+        description: Beneficiary summary file, coverage year 2008.
+      - name: beneficiary_2009
+        description: Beneficiary summary file, coverage year 2009.
+      - name: beneficiary_2010
+        description: Beneficiary summary file, coverage year 2010.
+      - name: inpatient_claims
+        description: Inpatient (hospital stay) claims, 2008–2010.
+      - name: outpatient_claims
+        description: Outpatient (facility, non-admission) claims, 2008–2010.
