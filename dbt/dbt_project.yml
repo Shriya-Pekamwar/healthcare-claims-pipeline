@@ -1,0 +1,37 @@
+name: healthcare_claims
+version: "1.0.0"
+config-version: 2
+profile: healthcare_claims
+
+model-paths: ["models"]
+macro-paths: ["macros"]
+test-paths: ["tests"]
+target-path: "target"
+clean-targets: ["target", "dbt_packages"]
+
+vars:
+  # Chronic condition flags used across staging, intermediate, and marts
+  chronic_conditions:
+    - has_alzheimers
+    - has_chf
+    - has_ckd
+    - has_cancer
+    - has_copd
+    - has_depression
+    - has_diabetes
+    - has_ischemic_heart_disease
+    - has_osteoporosis
+    - has_ra_oa
+    - has_stroke_tia
+
+models:
+  healthcare_claims:
+    staging:
+      +materialized: view
+      +schema: staging
+    intermediate:
+      +materialized: view
+      +schema: intermediate
+    marts:
+      +materialized: table
+      +schema: marts
