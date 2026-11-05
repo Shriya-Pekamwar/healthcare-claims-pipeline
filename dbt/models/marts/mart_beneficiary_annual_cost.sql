@@ -8,6 +8,8 @@ with claims as (
     from {{ ref('fct_claims') }} f
     join {{ ref('dim_beneficiary') }} b on f.beneficiary_key = b.beneficiary_key
     join {{ ref('dim_date') }} d        on f.claim_from_date_key = d.date_key
+    --Undated claims which cant be assigned to a year
+    where not f.is_undated
 )
 
 select

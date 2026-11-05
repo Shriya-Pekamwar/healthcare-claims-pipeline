@@ -3,8 +3,14 @@ with claims as (
 ),
 
 beneficiaries as (
-    select beneficiary_key, beneficiary_id, valid_from, valid_to
+    select beneficiary_key, beneficiary_id, valid_from, valid_to, is_current
     from {{ ref('dim_beneficiary') }}
+),
+
+current_beneficiaries as (
+    select beneficiary_key, beneficiary_id
+    from beneficiaries
+    where is_current
 ),
 
 providers as (
@@ -23,12 +29,15 @@ select
     c.claim_id,
     c.claim_segment,
     c.claim_type,
-    b.beneficiary_key,
+    -- Point-in-time version for dates claims; current version as a  flagged fallback for undated ones
+    coalesce(b.beneficiary_key,cb.beneficiary_key) as beneficiary_key,
     p.provider_key,
-    cast(date_format(c.claim_from_date, 'yyyyMMdd') as int) as claim_from_date_key,
-    cast(date_format(c.claim_thru_date, 'yyyyMMdd') as int) as claim_thru_date_key,
+    -- -1 = the "Unknown" member in dim_date
+    coalesce(cast(date_format(c.claim_from_date, 'yyyyMMdd') as int), -1) as claim_from_date_key,
+    coalesce(cast(date_format(c.claim_thru_date, 'yyyyMMdd') as int), -1) as claim_thru_date_key,
     c.claim_from_date,
     c.claim_thru_date,
+    c.claim_from_date is null as is_undated,
     c.drg_code,
     c.claim_payment_amount,
     c.primary_payer_paid_amount,
@@ -40,6 +49,9 @@ left join beneficiaries b
     on  c.beneficiary_id = b.beneficiary_id
     and c.claim_from_date >= b.valid_from
     and c.claim_from_date <  b.valid_to
+left join current_beneficiaries cb
+    on c.claim_from_date is null
+    and c.beneficiary_id = cb.beneficiary_id
 left join providers p
     on c.provider_id = p.provider_id
 left join diagnosis_counts d

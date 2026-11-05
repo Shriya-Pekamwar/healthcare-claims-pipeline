@@ -34,8 +34,13 @@ models:
       - name: beneficiary_id
         data_tests: [not_null]
       - name: claim_from_date
-        description: Parsed from CLM_FROM_DT (yyyyMMdd). Null means the raw value could not be parsed.
-        data_tests: [not_null]
+        description: >
+          Parsed from CLM_FROM_DT. The source leaves both from and thru dates blank on
+          ~1.3% of claims; these are kept and flagged downstream (is_undated).
+        data_tests:
+          - not_null:
+              config:
+                severity: warn
 
   - name: stg_synpuf__outpatient_claims
     description: One row per outpatient claim segment.
@@ -48,4 +53,10 @@ models:
       - name: beneficiary_id
         data_tests: [not_null]
       - name: claim_from_date
-        data_tests: [not_null]
+        description: >
+          Parsed from CLM_FROM_DT. The source leaves both from and thru dates blank on
+          ~1.3% of claims; these are kept and flagged downstream (is_undated).
+        data_tests:
+          - not_null:
+              config:
+                severity: warn

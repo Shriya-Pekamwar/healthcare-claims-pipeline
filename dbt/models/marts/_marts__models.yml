@@ -1,0 +1,101 @@
+version: 2
+
+models:
+  - name: fct_claims
+    description: One row per claim segment (inpatient and outpatient).
+    columns:
+      - name: claim_key
+        description: Surrogate key on claim_type, claim_id, claim_segment.
+        data_tests: [unique, not_null]
+      - name: claim_type
+        data_tests:
+          - accepted_values:
+              values: ['inpatient', 'outpatient']
+      - name: beneficiary_key
+        description: >
+          Point-in-time key to the beneficiary version valid on claim_from_date.
+          Undated claims fall back to the beneficiary's current version.
+        data_tests:
+          - not_null:
+              config:
+                severity: warn
+          - relationships:
+              to: ref('dim_beneficiary')
+              field: beneficiary_key
+      - name: provider_key
+        data_tests:
+          - relationships:
+              to: ref('dim_provider')
+              field: provider_key
+      - name: claim_from_date_key
+        description: Key to dim_date. -1 (Unknown member) when the source has no claim dates.
+        data_tests:
+          - not_null
+          - relationships:
+              to: ref('dim_date')
+              field: date_key
+      - name: is_undated
+        description: True when the source claim has no from or thru date.
+      - name: claim_payment_amount
+        data_tests:
+          - not_null:
+              config:
+                severity: warn
+          - dbt_utils.accepted_range:
+              min_value: 0
+              config:
+                severity: warn
+
+  - name: dim_beneficiary
+    description: SCD Type 2 beneficiary dimension. A new version is created only when tracked attributes change.
+    data_tests:
+      - dbt_utils.unique_combination_of_columns:
+          combination_of_columns: [beneficiary_id, version_number]
+    columns:
+      - name: beneficiary_key
+        data_tests: [unique, not_null]
+      - name: valid_from
+        data_tests: [not_null]
+      - name: valid_to
+        data_tests: [not_null]
+
+  - name: dim_provider
+    columns:
+      - name: provider_key
+        data_tests: [unique, not_null]
+      - name: provider_id
+        data_tests: [unique, not_null]
+
+  - name: dim_date
+    description: One row per calendar day from 2007 to 2010, plus an Unknown member (date_key = -1) for undated facts.
+    columns:
+      - name: date_key
+        data_tests: [unique, not_null]
+
+  - name: dim_diagnosis
+    columns:
+      - name: diagnosis_code
+        data_tests: [unique, not_null]
+
+  - name: bridge_claim_diagnosis
+    description: Many-to-many bridge between claims and ICD-9 diagnosis codes.
+    data_tests:
+      - dbt_utils.unique_combination_of_columns:
+          combination_of_columns: [claim_key, diagnosis_position]
+    columns:
+      - name: claim_key
+        data_tests:
+          - relationships:
+              to: ref('fct_claims')
+              field: claim_key
+      - name: diagnosis_code
+        data_tests:
+          - relationships:
+              to: ref('dim_diagnosis')
+              field: diagnosis_code
+
+  - name: mart_beneficiary_annual_cost
+    description: Total Medicare payments per beneficiary per year, with chronic condition burden. Excludes undated claims.
+    data_tests:
+      - dbt_utils.unique_combination_of_columns:
+          combination_of_columns: [beneficiary_id, claim_year]
