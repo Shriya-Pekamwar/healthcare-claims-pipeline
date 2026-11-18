@@ -1,0 +1,79 @@
+name: CI
+
+on:
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+env:
+  PYTHON_VERSION: "3.11"
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  python-tests:
+    name: Lint & unit tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+          cache: pip
+          cache-dependency-path: requirements-dev.txt
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+
+      - name: Install dependencies
+        run: pip install -r requirements-dev.txt
+
+      - name: Lint
+        run: ruff check ingestion tests
+
+      - name: Unit tests
+        run: pytest -v
+
+  dbt-build:
+    name: dbt build (isolated CI schema)
+    needs: python-tests
+    runs-on: ubuntu-latest
+    env:
+      DATABRICKS_HOST: ${{ secrets.DATABRICKS_HOST }}
+      DATABRICKS_HTTP_PATH: ${{ secrets.DATABRICKS_HTTP_PATH }}
+      DATABRICKS_TOKEN: ${{ secrets.DATABRICKS_TOKEN }}
+      # Every PR gets its own schema, so PRs never collide or touch prod
+      DBT_SCHEMA: ci_pr_${{ github.event.pull_request.number || github.run_id }}
+      DBT_PROFILES_DIR: .
+    defaults:
+      run:
+        working-directory: dbt
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+          cache: pip
+          cache-dependency-path: requirements-dbt.txt
+
+      - name: Install dbt
+        run: pip install -r ../requirements-dbt.txt
+
+      - name: Install dbt packages
+        run: dbt deps
+
+      - name: Check connection
+        run: dbt debug --target ci
+
+      - name: Build and test all models
+        run: dbt build --target ci
+
+      - name: Drop CI schema
+        if: always()
+        run: dbt run-operation drop_ci_schema --target ci
