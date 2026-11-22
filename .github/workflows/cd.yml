@@ -1,0 +1,65 @@
+name: CD
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+    inputs:
+      run_ingestion:
+        description: "Also re-run the bronze ingestion job"
+        type: boolean
+        default: false
+
+concurrency:
+  group: cd-prod
+  cancel-in-progress: false
+
+env:
+  PYTHON_VERSION: "3.11"
+
+jobs:
+  deploy-bundle:
+    name: Deploy Databricks bundle
+    runs-on: ubuntu-latest
+    env:
+      DATABRICKS_HOST: https://${{ secrets.DATABRICKS_HOST }}
+      DATABRICKS_TOKEN: ${{ secrets.DATABRICKS_TOKEN }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: databricks/setup-cli@main
+
+      - name: Validate bundle
+        run: databricks bundle validate --target prod
+
+      - name: Deploy bundle
+        run: databricks bundle deploy --target prod
+
+      - name: Run ingestion job (manual runs only)
+        if: ${{ github.event_name == 'workflow_dispatch' && inputs.run_ingestion }}
+        run: databricks bundle run ingest_bronze --target prod
+
+  dbt-prod:
+    name: dbt build (prod)
+    needs: deploy-bundle
+    runs-on: ubuntu-latest
+    env:
+      DATABRICKS_HOST: ${{ secrets.DATABRICKS_HOST }}
+      DATABRICKS_HTTP_PATH: ${{ secrets.DATABRICKS_HTTP_PATH }}
+      DATABRICKS_TOKEN: ${{ secrets.DATABRICKS_TOKEN }}
+      DBT_PROFILES_DIR: .
+    defaults:
+      run:
+        working-directory: dbt
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+          cache: pip
+          cache-dependency-path: requirements-dbt.txt
+
+      - run: pip install -r ../requirements-dbt.txt
+      - run: dbt deps
+      - run: dbt build --target prod
