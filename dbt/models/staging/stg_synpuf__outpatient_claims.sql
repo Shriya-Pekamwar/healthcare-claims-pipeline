@@ -4,7 +4,7 @@ with source as (
 
 renamed as (
     select
-        'outpatient'                                    as claim_type,
+        'Outpatient'                                    as claim_type,
         {{ clean_string('clm_id') }}                    as claim_id,
         {{ to_int('segment') }}                         as claim_segment,
         {{ clean_string('desynpuf_id') }}               as beneficiary_id,
